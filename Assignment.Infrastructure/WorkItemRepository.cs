@@ -79,7 +79,7 @@ public sealed class WorkItemRepository : IWorkItemRepository
     public IReadOnlyCollection<WorkItemDTO> ReadByTag(string tag) {
         var tasks = from t in _context.Items
                     orderby t.Title
-                    where t.Tags.Select(t=>t.Name).ToList().AsReadOnly().Contains(tag)
+                    where t.Tags.Select(ta=>ta.Name).ToList().AsReadOnly().Contains(tag)
                     select new WorkItemDTO(t.Id, t.Title, t.AssignedTo.Name, t.Tags.Select(t=>t.Name).ToList().AsReadOnly(), t.State);
 
          if (tasks.Any()){

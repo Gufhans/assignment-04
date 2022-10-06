@@ -20,7 +20,7 @@ public class WorkItemRepositoryTests
         var context = new KanbanContext(options.Options);
         context.Database.EnsureCreated();
         var user1 = new User("Oliver", "OllesEmail.dk") { Id = 1 };
-        context.Items.Add(new WorkItem("Do stuff") {AssignedTo = user1, Title = "Do stuff", State = State.New, Id = 1, Created = DateTime.UtcNow, Tags = new List<Tag>{new Tag("Test"){Id=1, Name="Test"},new Tag("Test"){Id=2, Name="Test2"}}});
+        context.Items.Add(new WorkItem("Do stuff") {AssignedTo = user1, Title = "Do stuff", State = State.New, Id = 1, Created = DateTime.UtcNow, Tags = new List<Tag>{new Tag("Test"){Id=1, Name="Test"},new Tag("Test2"){Id=2, Name="Test2"}}});
         //context.Tags.Add(new Tag{Id=1, Name="Test"});
         //context.Tags.Add(new Tag{Id=2, Name="Test2"});
         context.SaveChanges();
@@ -31,7 +31,7 @@ public class WorkItemRepositoryTests
     }
 
     [Fact] 
-    public void Delete_Task_With_State_New_Returns_Deleted() 
+    public void Delete_Item_With_State_New_Returns_Deleted() 
     {
         var response = _repository.Delete(1);
         response.Should().Be(Response.Deleted);
@@ -41,7 +41,7 @@ public class WorkItemRepositoryTests
     }
 
     [Fact]
-    public void Delete_Task_With_State_Active_Removed() 
+    public void Delete_Item_With_State_Active_Removed() 
     {
         var entity = _context.Items.Find(1);
         entity.State = State.Active;
@@ -52,7 +52,7 @@ public class WorkItemRepositoryTests
     }   
 
     [Fact]
-    public void Delete_Task_With_State_Resolved() 
+    public void Delete_Item_With_State_Resolved() 
     {
         var entity = _context.Items.Find(1);
         entity.State = State.Removed;
@@ -63,7 +63,7 @@ public class WorkItemRepositoryTests
     }
 
     [Fact]
-    public void Delete_Task_With_State_Closed() 
+    public void Delete_Item_With_State_Closed() 
     {
         var entity = _context.Items.Find(1);
         entity.State = State.Removed;
@@ -74,7 +74,7 @@ public class WorkItemRepositoryTests
     }
 
     [Fact]
-    public void Delete_Task_With_State_Removed() {
+    public void Delete_Item_With_State_Removed() {
         var entity = _context.Items.Find(1);
         entity.State = State.Removed;
         _context.SaveChanges();
@@ -84,20 +84,20 @@ public class WorkItemRepositoryTests
     }
 
     [Fact]
-    public void Create_Task_Will_Set_State_New() 
+    public void Create_Item_Will_Set_State_New() 
     {
         string[] collect = new string[1]{"Test"};
-        var task = _repository.Create(new WorkItemCreateDTO("Procrastinating", 1, "Doing everything and nothing", collect));
+        var Item = _repository.Create(new WorkItemCreateDTO("Procrastinating", 1, "Doing everything and nothing", collect));
         var entity = _context.Items.Find(1);
         entity.State.Should().Be(State.New);
     
     }
 
     [Fact]
-    public void Create_Task_Will_Set_Created_To_Now() 
+    public void Create_Item_Will_Set_Created_To_Now() 
     {
         
-        var task = _repository.Create(new WorkItemCreateDTO("Procrastinating", 1, "Doing everything and nothing", new List<string>{"Test"}));
+        var Item = _repository.Create(new WorkItemCreateDTO("Procrastinating", 1, "Doing everything and nothing", new List<string>{"Test"}));
         var entity = _context.Items.Find(2);
         var expected = DateTime.UtcNow;
         entity.Created.Should().BeCloseTo(expected, precision: TimeSpan.FromSeconds(5));
@@ -108,7 +108,7 @@ public class WorkItemRepositoryTests
 
 
     [Fact]
-    public void Create_Task_Will_Create_Task() 
+    public void Create_Item_Will_Create_Item() 
     {
         string[] collect = new string[1]{"Test"};
         var (response, created) = _repository.Create(new WorkItemCreateDTO("Procrastinating", 1, "Doing everything and nothing", collect));
@@ -120,7 +120,7 @@ public class WorkItemRepositoryTests
 
     
     [Fact]
-    public void Updating_State_Of_Task_Will_Change_Current_Time() 
+    public void Updating_State_Of_Item_Will_Change_Current_Time() 
     {   
     
         var response = _repository.Update(new WorkItemUpdateDTO(1, "Procrastinating", 1, "Doing everything and nothing", new List<string>{"Test"}, State.Active));
@@ -130,7 +130,7 @@ public class WorkItemRepositoryTests
     }
 
     [Fact]
-    public void Updating_Task_Edit_Tags() 
+    public void Updating_Item_Edit_Tags() 
     {   
     
         var response = _repository.Update(new WorkItemUpdateDTO(1, "Procrastinating", 1, "Doing everything and nothing", new List<string>{"Test", "Test2"}, State.Active));
@@ -149,9 +149,21 @@ public class WorkItemRepositoryTests
 
 
     [Fact]
-    public void Find_task_with_non_existing_id_returns_null() => _repository.Find(3).Should().BeNull();
+    public void Find_Item_with_non_existing_id_returns_null() => _repository.Find(3).Should().BeNull();
 
     [Fact]
-    public void ReadAll_returns_all_Tasks() => _repository.Read().Should().BeEquivalentTo(new[] { new WorkItemDTO(1, "Do stuff", "Oliver", new List<string>{"Test", "Test2"}, State.New)});
+    public void Read_returns_all_Items() => _repository.Read().Should().BeEquivalentTo(new[] { new WorkItemDTO(1, "Do stuff", "Oliver", new List<string>{"Test", "Test2"}, State.New)});
+
+
+     [Fact]
+    public void ReadByUser_returns_all_Items_with_User() => _repository.ReadByUser(1).Should().BeEquivalentTo(new[] { new WorkItemDTO(1, "Do stuff", "Oliver", new List<string>{"Test", "Test2"}, State.New)});
+
+     [Fact]
+    public void ReadRemoved_returns_all_RemovedItems() => _repository.ReadRemoved().Should().BeNull();
+
+     [Fact]
+    public void ReadByState_returns_all_ItemsByState() => _repository.ReadByState(State.New).Should().BeEquivalentTo(new[] { new WorkItemDTO(1, "Do stuff", "Oliver", new List<string>{"Test", "Test2"}, State.New)});
+
+
 
 }
